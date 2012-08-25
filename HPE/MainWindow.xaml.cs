@@ -26,20 +26,31 @@ namespace HPE
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // Obtiene el primer Kinect conectado
-            kinect = KinectSensor.KinectSensors[0];
-            
-            //Habilitamos la cámara de color, la de profundidad, y el rastreo de esqueletos
-            kinect.ColorStream.Enable();
-            kinect.DepthStream.Enable();
-            kinect.SkeletonStream.Enable();
-            
-            // Creamos los manejadores de eventos de color y esqueleto
-            kinect.ColorFrameReady += new EventHandler<ColorImageFrameReadyEventArgs>(kinect_ColorFrameReady);
-            kinect.SkeletonFrameReady += new EventHandler<SkeletonFrameReadyEventArgs>(kinect_SkeletonFrameReady);
+            // Si no es posible inicializar el kinect mandamos un mensaje de error
+            try
+            {
+                kinect = KinectSensor.KinectSensors[0];
 
-            // Iniciamos el Kinect y sus cámaras
-            kinect.Start();
+                //Habilitamos la cámara de color, la de profundidad, y el rastreo de esqueletos
+                kinect.ColorStream.Enable();
+                kinect.DepthStream.Enable();
+                kinect.SkeletonStream.Enable();
+
+                // Creamos los manejadores de eventos de color y esqueleto
+                kinect.ColorFrameReady += new EventHandler<ColorImageFrameReadyEventArgs>(kinect_ColorFrameReady);
+                kinect.SkeletonFrameReady += new EventHandler<SkeletonFrameReadyEventArgs>(kinect_SkeletonFrameReady);
+
+                // Iniciamos el Kinect y sus cámaras
+                kinect.Start();
+            }
+            catch
+            {
+                MessageBox.Show(
+                "No se puede iniciar el programa. Esto puede suceder por varios motivos. " + 
+                "Verifique que tiene por lo menos un Kinect conectado y que ninguna otra aplicación " + 
+                "esta haciendo uso de el. Tambien es posible que no tenga suficiciente memoria para ejecutar el programa", "Error");
+                Application.Current.Shutdown();
+            }
         }
 
         void kinect_SkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
@@ -55,9 +66,11 @@ namespace HPE
                 if (imagenColor == null) return;
 
                 // Creamos un contenedor para la imagen de color
-                byte[] datosColor = new byte[imagenColor.PixelDataLength];                  
+                byte[] datosColor = new byte[imagenColor.PixelDataLength];
+                  
                 // Copiamos la imagen al contenedor
                 imagenColor.CopyPixelDataTo(datosColor);
+
                 // Mostramos la imagen en el GUI
                 ColorGUI.Source = BitmapSource.Create(
                     imagenColor.Width,
