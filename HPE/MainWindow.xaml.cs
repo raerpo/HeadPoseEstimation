@@ -51,11 +51,14 @@ namespace HPE
         {
             using (ColorImageFrame imagenColor = e.OpenColorImageFrame())
             {
+                // Nos aseguramos que la imagen entregada por el kinect no sea invalida y genere error 
                 if (imagenColor == null) return;
 
+                // Creamos un contenedor para la imagen de color
                 byte[] datosColor = new byte[imagenColor.PixelDataLength];                  
+                // Copiamos la imagen al contenedor
                 imagenColor.CopyPixelDataTo(datosColor);
-
+                // Mostramos la imagen en el GUI
                 ColorGUI.Source = BitmapSource.Create(
                     imagenColor.Width,
                     imagenColor.Height,
