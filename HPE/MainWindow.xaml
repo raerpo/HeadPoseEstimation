@@ -1,0 +1,9 @@
+﻿<Window x:Class="HPE.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="476" Width="840" Loaded="Window_Loaded">
+    <Grid>
+        <Image Height="240" HorizontalAlignment="Left" Margin="12,12,0,0" Name="ColorGUI" Stretch="Fill" VerticalAlignment="Top" Width="320
+               " />
+    </Grid>
+</Window>
