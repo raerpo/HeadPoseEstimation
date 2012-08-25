@@ -71,15 +71,24 @@ namespace HPE
                 // Copiamos la imagen al contenedor
                 imagenColor.CopyPixelDataTo(datosColor);
 
-                // Mostramos la imagen en el GUI
-                ColorGUI.Source = BitmapSource.Create(
-                    imagenColor.Width,
-                    imagenColor.Height,
-                    96, 96,
-                    PixelFormats.Bgr32,
-                    null,
+                // Creamos una variable re-escribible para imagenes
+                WriteableBitmap imagenMapaDeBits = null;
+
+                // La primera vez se crea la imagen
+                if (imagenMapaDeBits == null)
+                {
+                    imagenMapaDeBits = new WriteableBitmap(imagenColor.Width, imagenColor.Height, 96, 96, PixelFormats.Bgr32, null);    
+                }
+
+                // Luego se reescribe cada vez que el kinect envia una imagen al manejador de eventos
+                imagenMapaDeBits.WritePixels(
+                    new Int32Rect(0, 0, imagenColor.Width, imagenColor.Height), 
                     datosColor,
-                    imagenColor.Width * imagenColor.BytesPerPixel);
+                    imagenColor.Width * imagenColor.BytesPerPixel, 
+                    0);
+
+                // Mostramos la imagen en el GUI
+                ColorGUI.Source = imagenMapaDeBits;   
             }
         }
     }
