@@ -17,10 +17,13 @@ namespace HPE
 {
     public partial class MainWindow : Window
     {
+        #region variables
+
         KinectSensor kinect;
         int conteoDePersonasEscena = 0;
         int conteoDePersonasRastreadas = 0;
-      
+        #endregion
+
         public MainWindow()
         {
             InitializeComponent();
@@ -35,29 +38,167 @@ namespace HPE
 
                 //Habilitamos la cámara de color, y el rastreo de esqueletos
                 kinect.ColorStream.Enable();
+                kinect.DepthStream.Enable();
                 kinect.SkeletonStream.Enable();
 
-                // Creamos los manejadores de eventos de color y esqueleto
-                kinect.ColorFrameReady += new EventHandler<ColorImageFrameReadyEventArgs>(kinect_ColorFrameReady);
-                kinect.SkeletonFrameReady += new EventHandler<SkeletonFrameReadyEventArgs>(kinect_SkeletonFrameReady);
+                // Creamos el manejador de eventos
+                kinect.AllFramesReady += new EventHandler<AllFramesReadyEventArgs>(kinect_AllFramesReady);
+
+
+                inclinacion.PreviewMouseUp += new MouseButtonEventHandler(inclinacion_PreviewMouseUp);
+                inclinacion.ValueChanged += new RoutedPropertyChangedEventHandler<double>(inclinacion_ValueChanged);
 
                 // Iniciamos el Kinect y sus cámaras
                 kinect.Start();
+                kinect.ElevationAngle = 0;
             }
             catch
             {
                 MessageBox.Show(
-                "No se puede iniciar el programa. Esto puede suceder por varios motivos. " + 
-                "Verifique que tiene por lo menos un Kinect conectado y que ninguna otra aplicación " + 
+                "No se puede iniciar el programa. Esto puede suceder por varios motivos. " +
+                "Verifique que tiene por lo menos un Kinect conectado y que ninguna otra aplicación " +
                 "esta haciendo uso de el. Tambien es posible que no tenga suficiciente memoria para ejecutar el programa", "Error");
                 Application.Current.Shutdown();
             }
         }
 
+        void inclinacion_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            angulo.Content = (int)inclinacion.Value;
+        }
+
+        void inclinacion_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            kinect.ElevationAngle = (int)inclinacion.Value;
+        }
+
         Skeleton[] skeletons = null;
 
-        void kinect_SkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
+        byte[] datosColor = null;
+
+        byte[] imagenColorProfundidad = null;
+
+        short[] datosProfundidad = null;
+
+        WriteableBitmap imagenMapaDeBits = null;
+
+        WriteableBitmap imagenProfundidadMapaDeBits = null;
+
+
+
+        void kinect_AllFramesReady(object sender, AllFramesReadyEventArgs e)
         {
+
+            #region Color
+
+            using (ColorImageFrame imagenColor = e.OpenColorImageFrame())
+            {
+                // Nos aseguramos que la imagen entregada por el kinect no sea invalida y genere error 
+                if (imagenColor == null) return;
+
+                // Creamos un contenedor para la imagen de color
+                if (datosColor == null)
+                {
+                    datosColor = new byte[imagenColor.PixelDataLength];
+                }
+
+                // Copiamos la imagen al contenedor
+                imagenColor.CopyPixelDataTo(datosColor);
+
+                // La primera vez se crea la imagen
+                if (imagenMapaDeBits == null)
+                {
+                    imagenMapaDeBits = new WriteableBitmap(imagenColor.Width, imagenColor.Height, 96, 96, PixelFormats.Bgr32, null);
+                }
+
+                // Luego se reescribe cada vez que el kinect envia una imagen al manejador de eventos
+                imagenMapaDeBits.WritePixels(
+                    new Int32Rect(0, 0, imagenColor.Width, imagenColor.Height),
+                    datosColor,
+                    imagenColor.Width * imagenColor.BytesPerPixel,
+                    0);
+
+                // Mostramos la imagen en el GUI
+                ColorGUI.Source = imagenMapaDeBits;
+            }
+
+            #endregion
+
+            #region Profundidad
+
+            using (DepthImageFrame imagenProfundidad = e.OpenDepthImageFrame())
+            {
+
+                if (imagenProfundidad == null) return;
+
+                if (datosProfundidad == null)
+                {
+                    datosProfundidad = new short[imagenProfundidad.PixelDataLength];
+                }
+
+                if (imagenColorProfundidad == null)
+                {
+                    imagenColorProfundidad = new byte[imagenProfundidad.PixelDataLength * 4];
+                }
+
+                imagenProfundidad.CopyPixelDataTo(datosProfundidad);
+
+                int depthColorImagePos = 0;
+
+                for (int depthPos = 0; depthPos < imagenProfundidad.PixelDataLength; depthPos++)
+                {
+                    int depthValue = datosProfundidad[depthPos] >> 3;
+                    // Check for the invalid values 
+                    if (depthValue == kinect.DepthStream.UnknownDepth)
+                    {
+                        imagenColorProfundidad[depthColorImagePos++] = 0; // Blue 
+                        imagenColorProfundidad[depthColorImagePos++] = 0; // Green 
+                        imagenColorProfundidad[depthColorImagePos++] = 0; // Red 
+                    }
+                    else if (depthValue == kinect.DepthStream.TooFarDepth)
+                    {
+                        imagenColorProfundidad[depthColorImagePos++] = 0; // Blue 
+                        imagenColorProfundidad[depthColorImagePos++] = 0; // Green 
+                        imagenColorProfundidad[depthColorImagePos++] = 0; // Red 
+                    }
+                    else if (depthValue == kinect.DepthStream.TooNearDepth)
+                    {
+                        imagenColorProfundidad[depthColorImagePos++] = 255; // Blue 
+                        imagenColorProfundidad[depthColorImagePos++] = 255; // Green 
+                        imagenColorProfundidad[depthColorImagePos++] = 255; // Red 
+                    }
+                    else
+                    {
+                        byte depthByte = (byte)(255 - (depthValue >> 4));
+                        imagenColorProfundidad[depthColorImagePos++] = depthByte; // Blue 
+                        imagenColorProfundidad[depthColorImagePos++] = depthByte; // Green 
+                        imagenColorProfundidad[depthColorImagePos++] = depthByte; // Red 
+                    }
+                    // transparency 
+                    depthColorImagePos++;
+                }
+
+                // we now have a new array of color data 
+
+                if (imagenProfundidadMapaDeBits == null)
+                {
+                    imagenProfundidadMapaDeBits = new WriteableBitmap(
+                        imagenProfundidad.Width,
+                        imagenProfundidad.Height,
+                        96,  // DpiX 
+                        96,  // DpiY 
+                        PixelFormats.Bgr32,
+                        null);
+                    profundidadGUI.Source = imagenProfundidadMapaDeBits;
+                }
+
+                imagenProfundidadMapaDeBits.WritePixels(new Int32Rect(0, 0, imagenProfundidad.Width, imagenProfundidad.Height), imagenColorProfundidad, imagenProfundidad.Width * 4, 0);
+
+            }
+            #endregion
+
+            #region Esqueleto
+
             using (SkeletonFrame frame = e.OpenSkeletonFrame())
             {
                 if (frame != null)
@@ -94,45 +235,12 @@ namespace HPE
             }
             LblpersonasRastreadas.Content = conteoDePersonasRastreadas;
             conteoDePersonasRastreadas = 0;
-        }
 
-        byte[] datosColor = null;
-
-        WriteableBitmap imagenMapaDeBits = null;
-
-        void kinect_ColorFrameReady(object sender, ColorImageFrameReadyEventArgs e)
-        {
-            using (ColorImageFrame imagenColor = e.OpenColorImageFrame())
-            {
-                // Nos aseguramos que la imagen entregada por el kinect no sea invalida y genere error 
-                if (imagenColor == null) return;
-
-                // Creamos un contenedor para la imagen de color
-                if (datosColor == null)
-                {
-                    datosColor = new byte[imagenColor.PixelDataLength];
-                }
-
-                // Copiamos la imagen al contenedor
-                imagenColor.CopyPixelDataTo(datosColor);
-
-                // La primera vez se crea la imagen
-                if (imagenMapaDeBits == null)
-                {
-                    imagenMapaDeBits = new WriteableBitmap(imagenColor.Width, imagenColor.Height, 96, 96, PixelFormats.Bgr32, null);
-                }
-
-                // Luego se reescribe cada vez que el kinect envia una imagen al manejador de eventos
-                imagenMapaDeBits.WritePixels(
-                    new Int32Rect(0, 0, imagenColor.Width, imagenColor.Height),
-                    datosColor,
-                    imagenColor.Width * imagenColor.BytesPerPixel,
-                    0);
-
-                // Mostramos la imagen en el GUI
-                ColorGUI.Source = imagenMapaDeBits;
-            }
+            #endregion
         }
 
     }
 }
+
+
+

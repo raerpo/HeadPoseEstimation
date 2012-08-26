@@ -1,7 +1,7 @@
 ﻿<Window x:Class="HPE.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Head pose estimation" Height="476" Width="840" Loaded="Window_Loaded">
+        Title="Head pose estimation" Height="613" Width="771" Loaded="Window_Loaded">
     <Grid>
         <GroupBox Header="Visor de video" Height="275" HorizontalAlignment="Left" Name="groupBox1" VerticalAlignment="Top" Width="344" Margin="7,2,0,0">
             <Grid>
@@ -9,7 +9,7 @@
                " Margin="6,6,0,0" />
             </Grid>
         </GroupBox>
-        <GroupBox Header="Estado" HorizontalAlignment="Left" Margin="371,2,0,343" Name="groupBox2" Width="357">
+        <GroupBox Header="Estado" HorizontalAlignment="Left" Margin="371,2,0,0" Name="groupBox2" Width="357" Height="97" VerticalAlignment="Top">
             <Grid>
                 <Label Content="Personas en la escena: " Height="28" HorizontalAlignment="Left" Margin="6,6,0,0" Name="label1" VerticalAlignment="Top" Width="157" FontSize="15" />
                 <Label Content="Personas rastreadas:" Height="28" HorizontalAlignment="Left" Margin="6,31,0,0" Name="label2" VerticalAlignment="Top" FontSize="15" />
@@ -18,7 +18,23 @@
             </Grid>
         </GroupBox>
         <GroupBox Header="Imagen RGB de las cabezas" Height="163" HorizontalAlignment="Left" Margin="371,114,0,0" Name="groupBox3" VerticalAlignment="Top" Width="357">
+            <Grid></Grid>
+        </GroupBox>
+        <GroupBox Header="Visor de profundidad" Height="275" HorizontalAlignment="Left" Margin="10,289,0,0" Name="groupBox4" VerticalAlignment="Top" Width="344">
+            <Grid>
+                <Image Height="240" HorizontalAlignment="Left" Margin="6,6,0,0" Name="profundidadGUI" Stretch="Fill" VerticalAlignment="Top" Width="320                " />
+            </Grid>
+        </GroupBox>
+        <GroupBox Header="Imagen RGB de las cabezas" Height="163" HorizontalAlignment="Left" Margin="371,289,0,0" Name="groupBox5" VerticalAlignment="Top" Width="357">
             <Grid />
+        </GroupBox>
+        <GroupBox Header="Controles" Height="106" HorizontalAlignment="Left" Margin="371,458,0,0" Name="groupBox6" VerticalAlignment="Top" Width="357">
+            <Grid>
+                <Button Content="Iniciar" Height="25" HorizontalAlignment="Left" Margin="247,28,0,0" Name="button1" VerticalAlignment="Top" Width="75" />
+                <Slider Height="23" HorizontalAlignment="Left" Margin="19,30,0,0" Name="inclinacion" VerticalAlignment="Top" Width="100" SmallChange="1" Minimum="-27" Maximum="27" />
+                <Label Content="Inclinación Kinect" Height="28" HorizontalAlignment="Left" Margin="17,49,0,0" Name="label3" VerticalAlignment="Top" />
+                <Label Content="0" Height="40" HorizontalAlignment="Left" Margin="124,19,0,0" Name="angulo" VerticalAlignment="Top" FontSize="20" Width="45" />
+            </Grid>
         </GroupBox>
     </Grid>
 </Window>
