@@ -18,7 +18,9 @@ namespace HPE
     public partial class MainWindow : Window
     {
         KinectSensor kinect;
-
+        int conteoDePersonasEscena = 0;
+        int conteoDePersonasRastreadas = 0;
+      
         public MainWindow()
         {
             InitializeComponent();
@@ -31,9 +33,8 @@ namespace HPE
             {
                 kinect = KinectSensor.KinectSensors[0];
 
-                //Habilitamos la cámara de color, la de profundidad, y el rastreo de esqueletos
+                //Habilitamos la cámara de color, y el rastreo de esqueletos
                 kinect.ColorStream.Enable();
-                kinect.DepthStream.Enable();
                 kinect.SkeletonStream.Enable();
 
                 // Creamos los manejadores de eventos de color y esqueleto
@@ -53,10 +54,51 @@ namespace HPE
             }
         }
 
+        Skeleton[] skeletons = null;
+
         void kinect_SkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
         {
-            //throw new NotImplementedException();
+            using (SkeletonFrame frame = e.OpenSkeletonFrame())
+            {
+                if (frame != null)
+                {
+                    skeletons = new Skeleton[frame.SkeletonArrayLength];
+                    frame.CopySkeletonDataTo(skeletons);
+                }
+            }
+
+            if (skeletons == null) return;
+
+            #region ConteoDePersonasEnLaEscena
+
+            foreach (Skeleton skeleton in skeletons)
+            {
+                if (skeleton.TrackingState != SkeletonTrackingState.NotTracked)
+                {
+                    conteoDePersonasEscena++;
+                }
+            }
+            LblpersonasEnEscena.Content = conteoDePersonasEscena;
+            conteoDePersonasEscena = 0;
+
+            #endregion
+
+            foreach (Skeleton skeleton in skeletons)
+            {
+                if (skeleton.TrackingState == SkeletonTrackingState.Tracked)
+                {
+                    conteoDePersonasRastreadas++;
+                    Joint headJoint = skeleton.Joints[JointType.Head];
+                    SkeletonPoint headPosition = headJoint.Position;
+                }
+            }
+            LblpersonasRastreadas.Content = conteoDePersonasRastreadas;
+            conteoDePersonasRastreadas = 0;
         }
+
+        byte[] datosColor = null;
+
+        WriteableBitmap imagenMapaDeBits = null;
 
         void kinect_ColorFrameReady(object sender, ColorImageFrameReadyEventArgs e)
         {
@@ -66,30 +108,31 @@ namespace HPE
                 if (imagenColor == null) return;
 
                 // Creamos un contenedor para la imagen de color
-                byte[] datosColor = new byte[imagenColor.PixelDataLength];
-                  
+                if (datosColor == null)
+                {
+                    datosColor = new byte[imagenColor.PixelDataLength];
+                }
+
                 // Copiamos la imagen al contenedor
                 imagenColor.CopyPixelDataTo(datosColor);
-
-                // Creamos una variable re-escribible para imagenes
-                WriteableBitmap imagenMapaDeBits = null;
 
                 // La primera vez se crea la imagen
                 if (imagenMapaDeBits == null)
                 {
-                    imagenMapaDeBits = new WriteableBitmap(imagenColor.Width, imagenColor.Height, 96, 96, PixelFormats.Bgr32, null);    
+                    imagenMapaDeBits = new WriteableBitmap(imagenColor.Width, imagenColor.Height, 96, 96, PixelFormats.Bgr32, null);
                 }
 
                 // Luego se reescribe cada vez que el kinect envia una imagen al manejador de eventos
                 imagenMapaDeBits.WritePixels(
-                    new Int32Rect(0, 0, imagenColor.Width, imagenColor.Height), 
+                    new Int32Rect(0, 0, imagenColor.Width, imagenColor.Height),
                     datosColor,
-                    imagenColor.Width * imagenColor.BytesPerPixel, 
+                    imagenColor.Width * imagenColor.BytesPerPixel,
                     0);
 
                 // Mostramos la imagen en el GUI
-                ColorGUI.Source = imagenMapaDeBits;   
+                ColorGUI.Source = imagenMapaDeBits;
             }
         }
+
     }
 }
