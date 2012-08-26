@@ -239,6 +239,14 @@ namespace HPE
             #endregion
         }
 
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            kinect.ColorStream.Disable();
+            kinect.DepthStream.Disable();
+            kinect.SkeletonStream.Disable();
+            kinect.Stop();
+        }
+
     }
 }
 
