@@ -25,7 +25,7 @@
                 <Image Height="240" HorizontalAlignment="Left" Margin="6,6,0,0" Name="profundidadGUI" Stretch="Fill" VerticalAlignment="Top" Width="320                " />
             </Grid>
         </GroupBox>
-        <GroupBox Header="Imagen RGB de las cabezas" Height="163" HorizontalAlignment="Left" Margin="371,289,0,0" Name="groupBox5" VerticalAlignment="Top" Width="357">
+        <GroupBox Header="Imagen de profundidad de las cabezas" Height="163" HorizontalAlignment="Left" Margin="371,289,0,0" Name="groupBox5" VerticalAlignment="Top" Width="357">
             <Grid />
         </GroupBox>
         <GroupBox Header="Controles" Height="106" HorizontalAlignment="Left" Margin="371,458,0,0" Name="groupBox6" VerticalAlignment="Top" Width="357">
