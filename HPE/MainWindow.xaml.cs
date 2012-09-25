@@ -72,6 +72,7 @@ namespace HPE
             kinect.ElevationAngle = (int)inclinacion.Value;
         }
 
+
         Skeleton[] skeletons = null;
 
         byte[] datosColor = null;
