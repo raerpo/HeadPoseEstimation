@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Head pose estimation" Height="613" Width="771" Loaded="Window_Loaded" Closed="Window_Closed">
     <Grid>
-        <GroupBox Header="Visor de video" Height="275" HorizontalAlignment="Left" Name="groupBox1" VerticalAlignment="Top" Width="344" Margin="7,2,0,0">
+        <GroupBox Header="Visor de IR" Height="275" HorizontalAlignment="Left" Name="groupBox1" VerticalAlignment="Top" Width="344" Margin="7,2,0,0">
             <Grid>
                 <Image Height="240" HorizontalAlignment="Left" Name="ColorGUI" Stretch="Fill" VerticalAlignment="Top" Width="320
                " Margin="6,6,0,0" />

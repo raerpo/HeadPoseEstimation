@@ -36,8 +36,8 @@ namespace HPE
             {
                 kinect = KinectSensor.KinectSensors[0];
 
-                //Habilitamos la cámara de color, y el rastreo de esqueletos
-                kinect.ColorStream.Enable();
+                //Habilitamos la cámara de color(IR), y el rastreo de esqueletos
+                kinect.ColorStream.Enable(ColorImageFormat.InfraredResolution640x480Fps30);
                 kinect.DepthStream.Enable();
                 kinect.SkeletonStream.Enable();
 
@@ -90,33 +90,33 @@ namespace HPE
         void kinect_AllFramesReady(object sender, AllFramesReadyEventArgs e)
         {
 
-            #region Color
+            #region IR
 
-            using (ColorImageFrame imagenColor = e.OpenColorImageFrame())
+            using (ColorImageFrame imagenIR = e.OpenColorImageFrame())
             {
                 // Nos aseguramos que la imagen entregada por el kinect no sea invalida y genere error 
-                if (imagenColor == null) return;
+                if (imagenIR == null) return;
 
                 // Creamos un contenedor para la imagen de color
                 if (datosColor == null)
                 {
-                    datosColor = new byte[imagenColor.PixelDataLength];
+                    datosColor = new byte[imagenIR.PixelDataLength];
                 }
 
                 // Copiamos la imagen al contenedor
-                imagenColor.CopyPixelDataTo(datosColor);
+                imagenIR.CopyPixelDataTo(datosColor);
 
                 // La primera vez se crea la imagen
                 if (imagenMapaDeBits == null)
                 {
-                    imagenMapaDeBits = new WriteableBitmap(imagenColor.Width, imagenColor.Height, 96, 96, PixelFormats.Bgr32, null);
+                    imagenMapaDeBits = new WriteableBitmap(imagenIR.Width, imagenIR.Height, 96, 96, PixelFormats.Gray16, null);
                 }
 
                 // Luego se reescribe cada vez que el kinect envia una imagen al manejador de eventos
                 imagenMapaDeBits.WritePixels(
-                    new Int32Rect(0, 0, imagenColor.Width, imagenColor.Height),
+                    new Int32Rect(0, 0, imagenIR.Width, imagenIR.Height),
                     datosColor,
-                    imagenColor.Width * imagenColor.BytesPerPixel,
+                    imagenIR.Width * imagenIR.BytesPerPixel,
                     0);
 
                 // Mostramos la imagen en el GUI
