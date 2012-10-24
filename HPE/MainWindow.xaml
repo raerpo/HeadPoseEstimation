@@ -17,7 +17,7 @@
                 <Label Content="0" Height="28" HorizontalAlignment="Left" Margin="145,31,0,0" Name="LblpersonasRastreadas" VerticalAlignment="Top" FontSize="15" />
             </Grid>
         </GroupBox>
-        <GroupBox Header="Imagen RGB de las cabezas" Height="163" HorizontalAlignment="Left" Margin="371,114,0,0" Name="groupBox3" VerticalAlignment="Top" Width="357">
+        <GroupBox Header="Imagen IR de las cabezas" Height="163" HorizontalAlignment="Left" Margin="371,114,0,0" Name="groupBox3" VerticalAlignment="Top" Width="357">
             <Grid></Grid>
         </GroupBox>
         <GroupBox Header="Visor de profundidad" Height="275" HorizontalAlignment="Left" Margin="10,289,0,0" Name="groupBox4" VerticalAlignment="Top" Width="344">
