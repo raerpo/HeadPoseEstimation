@@ -38,12 +38,14 @@ namespace HPE
 
                 //Habilitamos la cámara de color(IR), y el rastreo de esqueletos
                 kinect.ColorStream.Enable(ColorImageFormat.InfraredResolution640x480Fps30);
-                kinect.DepthStream.Enable();
+                kinect.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
+                kinect.SkeletonStream.TrackingMode = SkeletonTrackingMode.Seated;
                 kinect.SkeletonStream.Enable();
 
                 // Creamos el manejador de eventos
-                kinect.AllFramesReady += new EventHandler<AllFramesReadyEventArgs>(kinect_AllFramesReady);
+                kinect.SkeletonFrameReady += new EventHandler<SkeletonFrameReadyEventArgs>(kinect_SkeletonFrameReady);
 
+                kinect.DepthFrameReady += new EventHandler<DepthImageFrameReadyEventArgs>(kinect_DepthFrameReady);
 
                 inclinacion.PreviewMouseUp += new MouseButtonEventHandler(inclinacion_PreviewMouseUp);
                 inclinacion.ValueChanged += new RoutedPropertyChangedEventHandler<double>(inclinacion_ValueChanged);
@@ -62,71 +64,65 @@ namespace HPE
             }
         }
 
-        void inclinacion_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            angulo.Content = (int)inclinacion.Value;
-        }
-
-        void inclinacion_PreviewMouseUp(object sender, MouseButtonEventArgs e)
-        {
-            kinect.ElevationAngle = (int)inclinacion.Value;
-        }
 
 
         Skeleton[] skeletons = null;
-
-        byte[] datosColor = null;
 
         byte[] imagenColorProfundidad = null;
 
         short[] datosProfundidad = null;
 
-        WriteableBitmap imagenMapaDeBits = null;
-
         WriteableBitmap imagenProfundidadMapaDeBits = null;
 
 
 
-        void kinect_AllFramesReady(object sender, AllFramesReadyEventArgs e)
+        void kinect_SkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
         {
-
-            #region IR
-
-            using (ColorImageFrame imagenIR = e.OpenColorImageFrame())
+            using (SkeletonFrame frame = e.OpenSkeletonFrame())
             {
-                // Nos aseguramos que la imagen entregada por el kinect no sea invalida y genere error 
-                if (imagenIR == null) return;
-
-                // Creamos un contenedor para la imagen de color
-                if (datosColor == null)
+                if (frame != null)
                 {
-                    datosColor = new byte[imagenIR.PixelDataLength];
+                    skeletons = new Skeleton[frame.SkeletonArrayLength];
+                    frame.CopySkeletonDataTo(skeletons);
                 }
-
-                // Copiamos la imagen al contenedor
-                imagenIR.CopyPixelDataTo(datosColor);
-
-                // La primera vez se crea la imagen
-                if (imagenMapaDeBits == null)
-                {
-                    imagenMapaDeBits = new WriteableBitmap(imagenIR.Width, imagenIR.Height, 96, 96, PixelFormats.Gray16, null);
-                }
-
-                // Luego se reescribe cada vez que el kinect envia una imagen al manejador de eventos
-                imagenMapaDeBits.WritePixels(
-                    new Int32Rect(0, 0, imagenIR.Width, imagenIR.Height),
-                    datosColor,
-                    imagenIR.Width * imagenIR.BytesPerPixel,
-                    0);
-
-                // Mostramos la imagen en el GUI
-                ColorGUI.Source = imagenMapaDeBits;
             }
+
+            if (skeletons == null) return;
+
+            #region ConteoDePersonasEnLaEscena
+
+            foreach (Skeleton skeleton in skeletons)
+            {
+                if (skeleton.TrackingState != SkeletonTrackingState.NotTracked)
+                {
+                    conteoDePersonasEscena++;
+                }
+            }
+            LblpersonasEnEscena.Content = conteoDePersonasEscena;
+            conteoDePersonasEscena = 0;
 
             #endregion
 
-            #region Profundidad
+            foreach (Skeleton skeleton in skeletons)
+            {
+                if (skeleton.TrackingState == SkeletonTrackingState.Tracked)
+                {
+                    conteoDePersonasRastreadas++;
+                    Joint headJoint = skeleton.Joints[JointType.Head];
+                    SkeletonPoint headPosition = headJoint.Position;
 
+                    double angulo = ObtenerAnguloEspalda(skeleton);
+
+                    anguloCabezaImagen1.RenderTransform = new RotateTransform(angulo, anguloCabezaImagen1.Width / 2, anguloCabezaImagen1.Height / 2);
+
+                }
+            }
+            LblpersonasRastreadas.Content = conteoDePersonasRastreadas;
+            conteoDePersonasRastreadas = 0;
+        }
+
+        void kinect_DepthFrameReady(object sender, DepthImageFrameReadyEventArgs e)
+        {
             using (DepthImageFrame imagenProfundidad = e.OpenDepthImageFrame())
             {
 
@@ -196,53 +192,16 @@ namespace HPE
                 imagenProfundidadMapaDeBits.WritePixels(new Int32Rect(0, 0, imagenProfundidad.Width, imagenProfundidad.Height), imagenColorProfundidad, imagenProfundidad.Width * 4, 0);
 
             }
-            #endregion
+        }
 
-            #region Esqueleto
+        void inclinacion_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            angulo.Content = (int)inclinacion.Value;
+        }
 
-            using (SkeletonFrame frame = e.OpenSkeletonFrame())
-            {
-                if (frame != null)
-                {
-                    skeletons = new Skeleton[frame.SkeletonArrayLength];
-                    frame.CopySkeletonDataTo(skeletons);
-                }
-            }
-
-            if (skeletons == null) return;
-
-            #region ConteoDePersonasEnLaEscena
-
-            foreach (Skeleton skeleton in skeletons)
-            {
-                if (skeleton.TrackingState != SkeletonTrackingState.NotTracked)
-                {
-                    conteoDePersonasEscena++;
-                }
-            }
-            LblpersonasEnEscena.Content = conteoDePersonasEscena;
-            conteoDePersonasEscena = 0;
-
-            #endregion
-
-            foreach (Skeleton skeleton in skeletons)
-            {
-                if (skeleton.TrackingState == SkeletonTrackingState.Tracked)
-                {
-                    conteoDePersonasRastreadas++;
-                    Joint headJoint = skeleton.Joints[JointType.Head];
-                    SkeletonPoint headPosition = headJoint.Position;
-
-                    double angulo = ObtenerAnguloEspalda(skeleton);
-
-                    anguloCabezaImagen1.RenderTransform = new RotateTransform(angulo, anguloCabezaImagen1.Width / 2, anguloCabezaImagen1.Height / 2);
-
-                }
-            }
-            LblpersonasRastreadas.Content = conteoDePersonasRastreadas;
-            conteoDePersonasRastreadas = 0;
-
-            #endregion
+        void inclinacion_PreviewMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            kinect.ElevationAngle = (int)inclinacion.Value;
         }
 
         double ObtenerAnguloEspalda(Skeleton esqueleto)
@@ -268,7 +227,6 @@ namespace HPE
                     hombroDerecho.Position.X - hombroIzquierdo.Position.X) * 180.0 / Math.PI;
             }
         }
-
 
         private void Window_Closed(object sender, EventArgs e)
         {
