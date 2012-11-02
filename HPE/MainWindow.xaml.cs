@@ -232,6 +232,11 @@ namespace HPE
                     conteoDePersonasRastreadas++;
                     Joint headJoint = skeleton.Joints[JointType.Head];
                     SkeletonPoint headPosition = headJoint.Position;
+
+                    double angulo = ObtenerAnguloEspalda(skeleton);
+
+                    anguloCabezaImagen1.RenderTransform = new RotateTransform(angulo, anguloCabezaImagen1.Width / 2, anguloCabezaImagen1.Height / 2);
+
                 }
             }
             LblpersonasRastreadas.Content = conteoDePersonasRastreadas;
@@ -239,6 +244,31 @@ namespace HPE
 
             #endregion
         }
+
+        double ObtenerAnguloEspalda(Skeleton esqueleto)
+        {
+            Joint hombroIzquierdo = esqueleto.Joints[JointType.ShoulderLeft];
+            Joint hombroDerecho = esqueleto.Joints[JointType.ShoulderRight];
+
+            if (hombroDerecho.TrackingState == JointTrackingState.NotTracked ||
+                hombroDerecho.TrackingState == JointTrackingState.Inferred)
+            {
+                return 90;
+            }
+
+            else if (hombroIzquierdo.TrackingState == JointTrackingState.NotTracked ||
+                hombroIzquierdo.TrackingState == JointTrackingState.Inferred)
+            {
+                return -90;
+            }
+            else
+            {
+                return Math.Atan2(
+                    hombroDerecho.Position.Z - hombroIzquierdo.Position.Z,
+                    hombroDerecho.Position.X - hombroIzquierdo.Position.X) * 180.0 / Math.PI;
+            }
+        }
+
 
         private void Window_Closed(object sender, EventArgs e)
         {
