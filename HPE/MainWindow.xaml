@@ -9,15 +9,17 @@
                " Margin="6,6,0,0" />
             </Grid>
         </GroupBox>
-        <GroupBox Header="Estado" HorizontalAlignment="Left" Margin="371,2,0,0" Name="groupBox2" Width="357" Height="97" VerticalAlignment="Top">
+        <GroupBox Header="Estado" HorizontalAlignment="Left" Margin="371,2,0,0" Name="groupBox2" Width="357" Height="114" VerticalAlignment="Top">
             <Grid>
-                <Label Content="Personas en la escena: " Height="28" HorizontalAlignment="Left" Margin="6,6,0,0" Name="label1" VerticalAlignment="Top" Width="157" FontSize="15" />
-                <Label Content="Personas rastreadas:" Height="28" HorizontalAlignment="Left" Margin="6,31,0,0" Name="label2" VerticalAlignment="Top" FontSize="15" />
-                <Label Content="0" Height="28" HorizontalAlignment="Left" Margin="158,6,0,0" Name="LblpersonasEnEscena" VerticalAlignment="Top" FontSize="15" />
-                <Label Content="0" Height="28" HorizontalAlignment="Left" Margin="145,31,0,0" Name="LblpersonasRastreadas" VerticalAlignment="Top" FontSize="15" />
+                <Label Content="Personas en la escena: " Height="28" Margin="6,26,182,0" Name="label1" VerticalAlignment="Top" FontSize="15" />
+                <Label Content="Personas rastreadas:" Height="28" Margin="6,52,0,0" Name="label2" VerticalAlignment="Top" FontSize="15" HorizontalAlignment="Left" Width="144" />
+                <Label Content="0" Height="28" HorizontalAlignment="Left" Margin="158,27,0,0" Name="LblpersonasEnEscena" VerticalAlignment="Top" FontSize="15" />
+                <Label Content="0" Height="28" HorizontalAlignment="Left" Margin="146,53,0,0" Name="LblpersonasRastreadas" VerticalAlignment="Top" FontSize="15" />
+                <Label Content="Kinect Conectado:" FontSize="15" Height="28" Margin="6,1,195,0" Name="label4" VerticalAlignment="Top" />
+                <Label Content="No" FontSize="15" Height="28" HorizontalAlignment="Right" Margin="0,2,184,0" Name="LblkinectConectado" VerticalAlignment="Top" />
             </Grid>
         </GroupBox>
-        <GroupBox Header="Imagen IR de las cabezas" Height="163" HorizontalAlignment="Left" Margin="371,114,0,0" Name="groupBox3" VerticalAlignment="Top" Width="357">
+        <GroupBox Header="Imagen IR de las cabezas" Height="163" HorizontalAlignment="Left" Margin="371,124,0,0" Name="groupBox3" VerticalAlignment="Top" Width="357">
             <Grid></Grid>
         </GroupBox>
         <GroupBox Header="Visor de profundidad" Height="275" HorizontalAlignment="Left" Margin="10,289,0,0" Name="groupBox4" VerticalAlignment="Top" Width="344">

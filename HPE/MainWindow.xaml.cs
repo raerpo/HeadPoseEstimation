@@ -32,38 +32,53 @@ namespace HPE
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Si no es posible inicializar el kinect mandamos un mensaje de error
+            KinectSensor.KinectSensors.StatusChanged += new EventHandler<StatusChangedEventArgs>(KinectSensors_StatusChanged);
+            
             try
             {
-                kinect = KinectSensor.KinectSensors[0];
-
-                //Habilitamos la cámara de color(IR), y el rastreo de esqueletos
-                kinect.ColorStream.Enable(ColorImageFormat.InfraredResolution640x480Fps30);
-                kinect.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
-                kinect.SkeletonStream.TrackingMode = SkeletonTrackingMode.Seated;
-                kinect.SkeletonStream.Enable();
-
-                // Creamos el manejador de eventos
-                kinect.SkeletonFrameReady += new EventHandler<SkeletonFrameReadyEventArgs>(kinect_SkeletonFrameReady);
-
-                kinect.DepthFrameReady += new EventHandler<DepthImageFrameReadyEventArgs>(kinect_DepthFrameReady);
-
-                inclinacion.PreviewMouseUp += new MouseButtonEventHandler(inclinacion_PreviewMouseUp);
-                inclinacion.ValueChanged += new RoutedPropertyChangedEventHandler<double>(inclinacion_ValueChanged);
-
-                // Iniciamos el Kinect y sus cámaras
-                kinect.Start();
-                kinect.ElevationAngle = 0;
+                inicializar();
             }
-            catch
+            catch (Exception ex)
             {
-                MessageBox.Show(
-                "No se puede iniciar el programa. Esto puede suceder por varios motivos. " +
-                "Verifique que tiene por lo menos un Kinect conectado y que ninguna otra aplicación " +
-                "esta haciendo uso de el. Tambien es posible que no tenga suficiciente memoria para ejecutar el programa", "Error");
-                Application.Current.Shutdown();
+                MessageBox.Show("Para que este programa funcione debe contar con Kinect conectado al equipo");
             }
+
         }
 
+        void inicializar()
+        {
+            kinect = KinectSensor.KinectSensors[0];
+            //Habilitamos la cámara de color(IR), y el rastreo de esqueletos
+            kinect.ColorStream.Enable(ColorImageFormat.InfraredResolution640x480Fps30);
+            kinect.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
+            kinect.SkeletonStream.TrackingMode = SkeletonTrackingMode.Seated;
+            kinect.SkeletonStream.Enable();
+            // Creamos el manejador de eventos
+            kinect.SkeletonFrameReady += new EventHandler<SkeletonFrameReadyEventArgs>(kinect_SkeletonFrameReady);
+
+            kinect.DepthFrameReady += new EventHandler<DepthImageFrameReadyEventArgs>(kinect_DepthFrameReady);
+
+            inclinacion.PreviewMouseUp += new MouseButtonEventHandler(inclinacion_PreviewMouseUp);
+            inclinacion.ValueChanged += new RoutedPropertyChangedEventHandler<double>(inclinacion_ValueChanged);
+
+            // Iniciamos el Kinect y sus cámaras
+            kinect.Start();
+            kinect.ElevationAngle = 0;
+        }
+
+        void KinectSensors_StatusChanged(object sender, StatusChangedEventArgs e)
+        {
+            if (e.Status == KinectStatus.Connected)
+            {
+                inicializar();
+                LblkinectConectado.Content = "Si";
+            }
+            if (e.Status == KinectStatus.Disconnected)
+            {
+                MessageBox.Show("El kinect ha sido desconectado, conectelo nuevamente para que el programa funcione");
+                LblkinectConectado.Content = "No";
+            }
+        }
 
 
         Skeleton[] skeletons = null;
