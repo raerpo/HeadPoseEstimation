@@ -13,6 +13,17 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Microsoft.Kinect;
 
+
+//============================================================================================================================
+// Lista de tareas por hacer:
+
+// *Si el kinect no esta conectado al momento de iniciar el programa y la ventana se cierra,
+// el programa mandara un mensaje de error. Para corregirlo hay q asegurarse, antes de desabilitar y detener el 
+// streaming de datos, que el kinect ha sido iniciado. Ubicacion: metodo Window_Closed
+
+// *Cambiar el nombre de los objetos del GUI de tal forma que sea evidente si es un label, boton, canvas, etc
+
+
 namespace HPE
 {
     public partial class MainWindow : Window
@@ -49,9 +60,9 @@ namespace HPE
         {
             kinect = KinectSensor.KinectSensors[0];
             //Habilitamos la cámara de color(IR), y el rastreo de esqueletos
-            kinect.ColorStream.Enable(ColorImageFormat.InfraredResolution640x480Fps30);
+            //kinect.ColorStream.Enable(ColorImageFormat.InfraredResolution640x480Fps30);
             kinect.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
-            kinect.SkeletonStream.TrackingMode = SkeletonTrackingMode.Seated;
+            kinect.SkeletonStream.TrackingMode = SkeletonTrackingMode.Default;
             kinect.SkeletonStream.Enable();
             // Creamos el manejador de eventos
             kinect.SkeletonFrameReady += new EventHandler<SkeletonFrameReadyEventArgs>(kinect_SkeletonFrameReady);
@@ -64,8 +75,11 @@ namespace HPE
             // Iniciamos el Kinect y sus cámaras
             kinect.Start();
             kinect.ElevationAngle = 0;
+            LblkinectConectado.Content = "Si";
         }
 
+//=====================================================================================================================
+        // Metodo que controla los cambios de estado del kinect
         void KinectSensors_StatusChanged(object sender, StatusChangedEventArgs e)
         {
             if (e.Status == KinectStatus.Connected)
@@ -80,7 +94,6 @@ namespace HPE
             }
         }
 
-
         Skeleton[] skeletons = null;
 
         byte[] imagenColorProfundidad = null;
@@ -90,7 +103,8 @@ namespace HPE
         WriteableBitmap imagenProfundidadMapaDeBits = null;
 
 
-
+//=====================================================================================================================
+        // Metodo que se dispara cuando el kinect tiene el stream de datos de los esqueletos listo
         void kinect_SkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
         {
             using (SkeletonFrame frame = e.OpenSkeletonFrame())
@@ -123,19 +137,35 @@ namespace HPE
                 if (skeleton.TrackingState == SkeletonTrackingState.Tracked)
                 {
                     conteoDePersonasRastreadas++;
-                    Joint headJoint = skeleton.Joints[JointType.Head];
-                    SkeletonPoint headPosition = headJoint.Position;
 
-                    double angulo = ObtenerAnguloEspalda(skeleton);
+                    if (conteoDePersonasRastreadas == 1)
+                    {
+                        Joint headJoint1 = skeleton.Joints[JointType.Head];
+                        SkeletonPoint headPosition1 = headJoint1.Position;
 
-                    anguloCabezaImagen1.RenderTransform = new RotateTransform(angulo, anguloCabezaImagen1.Width / 2, anguloCabezaImagen1.Height / 2);
+                        double angulo1 = ObtenerAnguloEspalda(skeleton);
 
+                        anguloCabezaImagen1.RenderTransform = new RotateTransform(angulo1, anguloCabezaImagen1.Width / 2, anguloCabezaImagen1.Height / 2);
+                    }
+
+                    if (conteoDePersonasRastreadas == 2)
+                    {
+                        Joint headJoint2 = skeleton.Joints[JointType.Head];
+                        SkeletonPoint headPosition2 = headJoint2.Position;
+
+                        double angulo2 = ObtenerAnguloEspalda(skeleton);
+
+                        anguloCabezaImagen2.RenderTransform = new RotateTransform(angulo2, anguloCabezaImagen2.Width / 2, anguloCabezaImagen2.Height / 2);
+                    }
                 }
             }
             LblpersonasRastreadas.Content = conteoDePersonasRastreadas;
             conteoDePersonasRastreadas = 0;
         }
 
+
+//=====================================================================================================================
+        // Metodo que se dispara cuando el kinect tiene un frame de profundidad listo
         void kinect_DepthFrameReady(object sender, DepthImageFrameReadyEventArgs e)
         {
             using (DepthImageFrame imagenProfundidad = e.OpenDepthImageFrame())
@@ -209,16 +239,27 @@ namespace HPE
             }
         }
 
+//======================================================================================================================
+        // angulo es el label que muestra en el GUI el angulo de inclinacion del kinect
         void inclinacion_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             angulo.Content = (int)inclinacion.Value;
         }
 
+//======================================================================================================================
+        // inclinacion es el nombre del slider que controla el angulo de elevacion del kinect
+        // El evento PreviewMouseUP se dispara cuando el mouse suelta un clic encima del objeto en el GUI
         void inclinacion_PreviewMouseUp(object sender, MouseButtonEventArgs e)
         {
             kinect.ElevationAngle = (int)inclinacion.Value;
         }
 
+//======================================================================================================================
+        // El metodo obtenerAnguloEspalda recibe como argumento una variable de tipo "Skeleton" y entrega
+        // el angulo en grados (double) del cuerpo con respecto al kinect. 
+        
+        // *Por el momento solo funciona si las personas
+        // rastreadas estan de frente al Kinect ya que si la persona esta de espalda el angulo es erroneo*
         double ObtenerAnguloEspalda(Skeleton esqueleto)
         {
             Joint hombroIzquierdo = esqueleto.Joints[JointType.ShoulderLeft];
@@ -243,6 +284,8 @@ namespace HPE
             }
         }
 
+//======================================================================================================================
+        // Evento que se dispara cuando la ventana esta siendo cerrada.
         private void Window_Closed(object sender, EventArgs e)
         {
             kinect.ColorStream.Disable();

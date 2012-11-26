@@ -31,6 +31,10 @@
             <Grid>
                 <Canvas Height="126" HorizontalAlignment="Left" Margin="10,8,0,0" Name="anguloCabezaImagen1" VerticalAlignment="Top" Width="120">
                     <Image Canvas.Left="0" Canvas.Top="0" Height="122" Name="image1" Source="/HPE;component/Circulo.png" Stretch="Fill" Width="119" />
+                    
+                </Canvas>
+                <Canvas Height="126" HorizontalAlignment="Left" Margin="215,7,0,0" Name="anguloCabezaImagen2" VerticalAlignment="Top" Width="120">
+                    <Image Height="122" Margin="211,6,15,12" Name="image2" Source="/HPE;component/Circulo.png" Stretch="Fill" Width="119" Canvas.Left="-211" Canvas.Top="-4" />
                 </Canvas>
             </Grid>
         </GroupBox>
