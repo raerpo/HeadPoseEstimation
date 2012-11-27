@@ -1,7 +1,7 @@
 ﻿<Window x:Class="HPE.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Head pose estimation" Height="613" Width="761" Loaded="Window_Loaded" Closed="Window_Closed">
+        Title="Head pose estimation" Height="726" Width="761" Loaded="Window_Loaded" Closed="Window_Closed">
     <Grid Width="749">
         <GroupBox Header="Visor de IR" Height="275" HorizontalAlignment="Left" Name="groupBox1" VerticalAlignment="Top" Width="344" Margin="7,2,0,0">
             <Grid>
@@ -19,8 +19,13 @@
                 <Label Content="No" FontSize="15" Height="28" HorizontalAlignment="Right" Margin="0,2,184,0" Name="LblkinectConectado" VerticalAlignment="Top" />
             </Grid>
         </GroupBox>
-        <GroupBox Header="Imagen IR de las cabezas" Height="163" HorizontalAlignment="Left" Margin="371,124,0,0" Name="groupBox3" VerticalAlignment="Top" Width="357">
-            <Grid></Grid>
+        <GroupBox Header="Cabeza 1" Height="163" HorizontalAlignment="Left" Margin="371,124,0,0" Name="groupBox3" VerticalAlignment="Top" Width="357">
+            <Grid>
+                <Canvas Height="126" HorizontalAlignment="Left" Margin="10,8,0,0" Name="anguloCabezaImagen1" VerticalAlignment="Top" Width="120">
+                    <Image Canvas.Left="0" Canvas.Top="0" Height="122" Name="image1" Source="/HPE;component/Circulo.png" Stretch="Fill" Width="119" />
+                </Canvas>
+                <Image Height="100" HorizontalAlignment="Left" Margin="154,21,0,0" Name="imgColorCabeza1" Stretch="Fill" VerticalAlignment="Top" Width="100" />
+            </Grid>
         </GroupBox>
         <GroupBox Header="Visor de profundidad" Height="275" HorizontalAlignment="Left" Margin="10,289,0,0" Name="groupBox4" VerticalAlignment="Top" Width="344">
             <Grid>
@@ -29,10 +34,6 @@
         </GroupBox>
         <GroupBox Header="Angulo espalda" Height="163" HorizontalAlignment="Left" Margin="371,289,0,0" Name="groupBox5" VerticalAlignment="Top" Width="357">
             <Grid>
-                <Canvas Height="126" HorizontalAlignment="Left" Margin="10,8,0,0" Name="anguloCabezaImagen1" VerticalAlignment="Top" Width="120">
-                    <Image Canvas.Left="0" Canvas.Top="0" Height="122" Name="image1" Source="/HPE;component/Circulo.png" Stretch="Fill" Width="119" />
-                    
-                </Canvas>
                 <Canvas Height="126" HorizontalAlignment="Left" Margin="215,7,0,0" Name="anguloCabezaImagen2" VerticalAlignment="Top" Width="120">
                     <Image Height="122" Margin="211,6,15,12" Name="image2" Source="/HPE;component/Circulo.png" Stretch="Fill" Width="119" Canvas.Left="-211" Canvas.Top="-4" />
                 </Canvas>
@@ -46,5 +47,7 @@
                 <Label Content="0" Height="40" HorizontalAlignment="Left" Margin="124,19,0,0" Name="angulo" VerticalAlignment="Top" FontSize="20" Width="45" />
             </Grid>
         </GroupBox>
+        <Label Content="Label" Height="28" HorizontalAlignment="Left" Margin="226,610,0,0" Name="lblPrueba1" VerticalAlignment="Top" Width="97" />
+        <Label Content="Label" Height="28" HorizontalAlignment="Left" Margin="353,610,0,0" Name="lblPrueba2" VerticalAlignment="Top" Width="92" />
     </Grid>
 </Window>

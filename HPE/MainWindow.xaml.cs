@@ -17,10 +17,6 @@ using Microsoft.Kinect;
 //============================================================================================================================
 // Lista de tareas por hacer:
 
-// *Si el kinect no esta conectado al momento de iniciar el programa y la ventana se cierra,
-// el programa mandara un mensaje de error. Para corregirlo hay q asegurarse, antes de desabilitar y detener el 
-// streaming de datos, que el kinect ha sido iniciado. Ubicacion: metodo Window_Closed
-
 // *Cambiar el nombre de los objetos del GUI de tal forma que sea evidente si es un label, boton, canvas, etc
 
 
@@ -56,19 +52,23 @@ namespace HPE
 
         }
 
+//====================================================================================================================
+        // Metodo que inicaliza el sensor kinect
+        // habilita los streams de datos del kinect y crea los manejadores de eventos de esqueleto y profundidad, ademas 
+        // de los manejadores que controlan el slider "sldInclinacion" 
         void inicializar()
         {
             kinect = KinectSensor.KinectSensors[0];
-            //Habilitamos la cámara de color(IR), y el rastreo de esqueletos
-            //kinect.ColorStream.Enable(ColorImageFormat.InfraredResolution640x480Fps30);
+
+            kinect.ColorStream.Enable(ColorImageFormat.InfraredResolution640x480Fps30);
             kinect.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
             kinect.SkeletonStream.TrackingMode = SkeletonTrackingMode.Default;
             kinect.SkeletonStream.Enable();
-            // Creamos el manejador de eventos
+
+            // Creamos los manejadores de eventos
+            kinect.ColorFrameReady += new EventHandler<ColorImageFrameReadyEventArgs>(kinect_ColorFrameReady);
             kinect.SkeletonFrameReady += new EventHandler<SkeletonFrameReadyEventArgs>(kinect_SkeletonFrameReady);
-
             kinect.DepthFrameReady += new EventHandler<DepthImageFrameReadyEventArgs>(kinect_DepthFrameReady);
-
             inclinacion.PreviewMouseUp += new MouseButtonEventHandler(inclinacion_PreviewMouseUp);
             inclinacion.ValueChanged += new RoutedPropertyChangedEventHandler<double>(inclinacion_ValueChanged);
 
@@ -77,6 +77,23 @@ namespace HPE
             kinect.ElevationAngle = 0;
             LblkinectConectado.Content = "Si";
         }
+
+        //=====================================================================================================================
+        // Variables globales
+
+        Skeleton[] skeletons = null;
+
+        ColorImagePoint cabezaColor;
+
+        DepthImagePoint cabezaProfundidad;
+
+
+        byte[] imagenColorProfundidad = null;
+
+        short[] datosProfundidad = null;
+
+        WriteableBitmap imagenProfundidadMapaDeBits = null;
+
 
 //=====================================================================================================================
         // Metodo que controla los cambios de estado del kinect
@@ -94,14 +111,43 @@ namespace HPE
             }
         }
 
-        Skeleton[] skeletons = null;
 
-        byte[] imagenColorProfundidad = null;
+//=====================================================================================================================
+        // Metodo que se dispara cuando el kinect tiene el stream de datos de color listo
+        void kinect_ColorFrameReady(object sender, ColorImageFrameReadyEventArgs e)
+        {
+            using (ColorImageFrame frame = e.OpenColorImageFrame())
+            {
+                if (frame == null) return;
+                byte[] colorData = new byte[frame.PixelDataLength];
+                frame.CopyPixelDataTo(colorData);
 
-        short[] datosProfundidad = null;
+                BitmapSource imagenColor = BitmapSource.Create(
+                    frame.Width, frame.Height,
+                    96,
+                    96,
+                    PixelFormats.Gray16, // Imagen proveniente de la camara infraroja
+                    null,
+                    colorData,
+                    frame.Width * frame.BytesPerPixel);
 
-        WriteableBitmap imagenProfundidadMapaDeBits = null;
+                Int32Rect coordenadasRegion;
 
+                if (cabezaColor.X < 50 && cabezaColor.Y < 50)
+                {
+                    coordenadasRegion = new Int32Rect(cabezaColor.X, cabezaColor.Y, 100, 100);
+                }
+                else
+                {
+                    coordenadasRegion = new Int32Rect(cabezaColor.X - 50, cabezaColor.Y - 50, 100, 100);
+                }
+                    byte[] regionData = new byte[100 * 100 * frame.BytesPerPixel];
+                    imagenColor.CopyPixels(coordenadasRegion, regionData, 100 * frame.BytesPerPixel, 0);
+                    BitmapSource regionImage = BitmapSource.Create(
+                    100, 100, 96, 96, PixelFormats.Gray16, null, regionData, 100 * frame.BytesPerPixel);
+                    imgColorCabeza1.Source = regionImage;     
+            }
+        }
 
 //=====================================================================================================================
         // Metodo que se dispara cuando el kinect tiene el stream de datos de los esqueletos listo
@@ -118,6 +164,7 @@ namespace HPE
 
             if (skeletons == null) return;
 
+            //Devuelve la variable "conteoPersonasEscena"
             #region ConteoDePersonasEnLaEscena
 
             foreach (Skeleton skeleton in skeletons)
@@ -130,8 +177,10 @@ namespace HPE
             LblpersonasEnEscena.Content = conteoDePersonasEscena;
             conteoDePersonasEscena = 0;
 
-            #endregion
+            #endregion 
 
+
+            #region OperacionesConEsqueletos
             foreach (Skeleton skeleton in skeletons)
             {
                 if (skeleton.TrackingState == SkeletonTrackingState.Tracked)
@@ -140,27 +189,39 @@ namespace HPE
 
                     if (conteoDePersonasRastreadas == 1)
                     {
-                        Joint headJoint1 = skeleton.Joints[JointType.Head];
-                        SkeletonPoint headPosition1 = headJoint1.Position;
+
+                        // Obtener las coordenadas de la cabeza de la primera persona tanto en color como
+                        // en profundidad
+                        SkeletonPoint cabeza = skeleton.Joints[JointType.Head].Position;
+                        cabezaColor = kinect.MapSkeletonPointToColor(cabeza, ColorImageFormat.RgbResolution640x480Fps30);
+                        cabezaProfundidad = kinect.MapSkeletonPointToDepth(cabeza, DepthImageFormat.Resolution640x480Fps30);
+
+                        lblPrueba1.Content = cabezaColor.X;
+                        lblPrueba2.Content = cabezaColor.Y;
 
                         double angulo1 = ObtenerAnguloEspalda(skeleton);
 
-                        anguloCabezaImagen1.RenderTransform = new RotateTransform(angulo1, anguloCabezaImagen1.Width / 2, anguloCabezaImagen1.Height / 2);
+                        // Rotamos la imagen que representa el angulo de la primera cabeza
+                        anguloCabezaImagen1.RenderTransform = new RotateTransform(
+                            angulo1, anguloCabezaImagen1.Width / 2, anguloCabezaImagen1.Height / 2);
                     }
 
                     if (conteoDePersonasRastreadas == 2)
                     {
-                        Joint headJoint2 = skeleton.Joints[JointType.Head];
-                        SkeletonPoint headPosition2 = headJoint2.Position;
 
                         double angulo2 = ObtenerAnguloEspalda(skeleton);
 
-                        anguloCabezaImagen2.RenderTransform = new RotateTransform(angulo2, anguloCabezaImagen2.Width / 2, anguloCabezaImagen2.Height / 2);
+                        // Rotamos la imagen que representa el angulo de la primera cabeza
+                        anguloCabezaImagen2.RenderTransform = new RotateTransform(
+                            angulo2, anguloCabezaImagen2.Width / 2, anguloCabezaImagen2.Height / 2);
                     }
                 }
             }
             LblpersonasRastreadas.Content = conteoDePersonasRastreadas;
             conteoDePersonasRastreadas = 0;
+            #endregion
+
+
         }
 
 
