@@ -117,11 +117,14 @@ namespace HPE
         // Metodo que se dispara cuando el kinect tiene el stream de datos de color listo
         void kinect_ColorFrameReady(object sender, ColorImageFrameReadyEventArgs e)
         {
+
+            // Region de interes de la cabeza
             using (ColorImageFrame frame = e.OpenColorImageFrame())
             {
-                if (conteoDePersonasRastreadas != 0)
-                {
+
                     if (frame == null) return;
+
+                    mostrarImagenColor(frame);    
 
                     byte[] colorData = new byte[frame.PixelDataLength];
 
@@ -153,10 +156,31 @@ namespace HPE
                         BitmapSource regionImage = BitmapSource.Create(
                         100, 100, 96, 96, PixelFormats.Gray16, null, regionData, 100 * frame.BytesPerPixel);
                         imgColorCabeza1.Source = regionImage;
-                }
+                
             }
         }
 
+//=================================================================================================================
+        // Metodo que muestra la imagen de color de la escena en el GUI
+        void mostrarImagenColor(ColorImageFrame frame)
+        {
+            if (frame == null) return;
+
+            byte[] colorData = new byte[frame.PixelDataLength];
+
+            frame.CopyPixelDataTo(colorData);
+
+            BitmapSource imagenColor = BitmapSource.Create(
+                frame.Width, frame.Height,
+                96,
+                96,
+                PixelFormats.Gray16, // Imagen proveniente de la camara infraroja
+                null,
+                colorData,
+                frame.Width * frame.BytesPerPixel);
+
+            ColorGUI.Source = imagenColor;
+        }
 //=====================================================================================================================
         // Metodo que se dispara cuando el kinect tiene el stream de datos de los esqueletos listo
         void kinect_SkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
