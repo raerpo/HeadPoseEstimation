@@ -288,10 +288,13 @@ namespace HPE
         // Evento que se dispara cuando la ventana esta siendo cerrada.
         private void Window_Closed(object sender, EventArgs e)
         {
-            kinect.ColorStream.Disable();
-            kinect.DepthStream.Disable();
-            kinect.SkeletonStream.Disable();
-            kinect.Stop();
+            if (kinect != null)
+            {
+                kinect.ColorStream.Disable();
+                kinect.DepthStream.Disable();
+                kinect.SkeletonStream.Disable();
+                kinect.Stop();
+            }
         }
 
     }
