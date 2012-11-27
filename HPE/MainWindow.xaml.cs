@@ -15,9 +15,16 @@ using Microsoft.Kinect;
 
 
 //============================================================================================================================
-// Lista de tareas por hacer:
+// Lista de tareas pendientes:
 
+// ** Importante ** : Existen muchas tareas del programa que estan siendo realizadas de forma integrada en los manejadores de evento.
+//                    Hay que revisar e implementar las que se pueden poner en metodos individuales, Ej: conteo de personas, conteo de
+//                    personas rastreadas, visualizacion de las cabezas tanto de color como las de profundidad.
 // *Cambiar el nombre de los objetos del GUI de tal forma que sea evidente si es un label, boton, canvas, etc
+// *Cuando los dos visores de la primera cabeza funcionen implementar los de la segunda
+// *Implementar un metodo para hallar la ROI con el fin de que no quede incluido en el manejador de eventos del stream de color 
+//  (va de la mano de la primera tarea)
+// hacer lo mismo con la ROI para el stream de profundidad
 
 
 namespace HPE
@@ -181,6 +188,7 @@ namespace HPE
 
             ColorGUI.Source = imagenColor;
         }
+
 //=====================================================================================================================
         // Metodo que se dispara cuando el kinect tiene el stream de datos de los esqueletos listo
         void kinect_SkeletonFrameReady(object sender, SkeletonFrameReadyEventArgs e)
@@ -252,7 +260,6 @@ namespace HPE
 
 
         }
-
 
 //=====================================================================================================================
         // Metodo que se dispara cuando el kinect tiene un frame de profundidad listo
