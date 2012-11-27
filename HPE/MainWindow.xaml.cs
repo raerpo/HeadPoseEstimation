@@ -24,12 +24,29 @@ namespace HPE
 {
     public partial class MainWindow : Window
     {
-        #region variables
+
+        //=====================================================================================================================
+        // Variables globales
 
         KinectSensor kinect;
+
         int conteoDePersonasEscena = 0;
+
         int conteoDePersonasRastreadas = 0;
-        #endregion
+
+        Skeleton[] skeletons = null;
+
+        ColorImagePoint cabezaColor;
+
+        DepthImagePoint cabezaProfundidad;
+
+        byte[] imagenColorProfundidad = null;
+
+        short[] datosProfundidad = null;
+
+        WriteableBitmap imagenProfundidadMapaDeBits = null;
+        
+        //====================================================================================================================
 
         public MainWindow()
         {
@@ -68,7 +85,7 @@ namespace HPE
             // Creamos los manejadores de eventos
             kinect.ColorFrameReady += new EventHandler<ColorImageFrameReadyEventArgs>(kinect_ColorFrameReady);
             kinect.SkeletonFrameReady += new EventHandler<SkeletonFrameReadyEventArgs>(kinect_SkeletonFrameReady);
-            kinect.DepthFrameReady += new EventHandler<DepthImageFrameReadyEventArgs>(kinect_DepthFrameReady);
+            //kinect.DepthFrameReady += new EventHandler<DepthImageFrameReadyEventArgs>(kinect_DepthFrameReady);
             inclinacion.PreviewMouseUp += new MouseButtonEventHandler(inclinacion_PreviewMouseUp);
             inclinacion.ValueChanged += new RoutedPropertyChangedEventHandler<double>(inclinacion_ValueChanged);
 
@@ -77,22 +94,6 @@ namespace HPE
             kinect.ElevationAngle = 0;
             LblkinectConectado.Content = "Si";
         }
-
-        //=====================================================================================================================
-        // Variables globales
-
-        Skeleton[] skeletons = null;
-
-        ColorImagePoint cabezaColor;
-
-        DepthImagePoint cabezaProfundidad;
-
-
-        byte[] imagenColorProfundidad = null;
-
-        short[] datosProfundidad = null;
-
-        WriteableBitmap imagenProfundidadMapaDeBits = null;
 
 
 //=====================================================================================================================
@@ -118,34 +119,41 @@ namespace HPE
         {
             using (ColorImageFrame frame = e.OpenColorImageFrame())
             {
-                if (frame == null) return;
-                byte[] colorData = new byte[frame.PixelDataLength];
-                frame.CopyPixelDataTo(colorData);
-
-                BitmapSource imagenColor = BitmapSource.Create(
-                    frame.Width, frame.Height,
-                    96,
-                    96,
-                    PixelFormats.Gray16, // Imagen proveniente de la camara infraroja
-                    null,
-                    colorData,
-                    frame.Width * frame.BytesPerPixel);
-
-                Int32Rect coordenadasRegion;
-
-                if (cabezaColor.X < 50 && cabezaColor.Y < 50)
+                if (conteoDePersonasRastreadas != 0)
                 {
-                    coordenadasRegion = new Int32Rect(cabezaColor.X, cabezaColor.Y, 100, 100);
+                    if (frame == null) return;
+
+                    byte[] colorData = new byte[frame.PixelDataLength];
+
+                    frame.CopyPixelDataTo(colorData);
+
+                    BitmapSource imagenColor = BitmapSource.Create(
+                        frame.Width, frame.Height,
+                        96,
+                        96,
+                        PixelFormats.Gray16, // Imagen proveniente de la camara infraroja
+                        null,
+                        colorData,
+                        frame.Width * frame.BytesPerPixel);
+
+                    Int32Rect coordenadasRegion;
+
+
+                        if (cabezaColor.X < 50 || cabezaColor.Y < 50)
+                        {
+                            coordenadasRegion = new Int32Rect(cabezaColor.X, cabezaColor.Y, 100, 100);
+                        }
+                        else
+                        {
+                            coordenadasRegion = new Int32Rect(cabezaColor.X - 50, cabezaColor.Y - 50, 100, 100);
+                        }
+
+                        byte[] regionData = new byte[100 * 100 * frame.BytesPerPixel];
+                        imagenColor.CopyPixels(coordenadasRegion, regionData, 100 * frame.BytesPerPixel, 0);
+                        BitmapSource regionImage = BitmapSource.Create(
+                        100, 100, 96, 96, PixelFormats.Gray16, null, regionData, 100 * frame.BytesPerPixel);
+                        imgColorCabeza1.Source = regionImage;
                 }
-                else
-                {
-                    coordenadasRegion = new Int32Rect(cabezaColor.X - 50, cabezaColor.Y - 50, 100, 100);
-                }
-                    byte[] regionData = new byte[100 * 100 * frame.BytesPerPixel];
-                    imagenColor.CopyPixels(coordenadasRegion, regionData, 100 * frame.BytesPerPixel, 0);
-                    BitmapSource regionImage = BitmapSource.Create(
-                    100, 100, 96, 96, PixelFormats.Gray16, null, regionData, 100 * frame.BytesPerPixel);
-                    imgColorCabeza1.Source = regionImage;     
             }
         }
 
@@ -195,9 +203,6 @@ namespace HPE
                         SkeletonPoint cabeza = skeleton.Joints[JointType.Head].Position;
                         cabezaColor = kinect.MapSkeletonPointToColor(cabeza, ColorImageFormat.RgbResolution640x480Fps30);
                         cabezaProfundidad = kinect.MapSkeletonPointToDepth(cabeza, DepthImageFormat.Resolution640x480Fps30);
-
-                        lblPrueba1.Content = cabezaColor.X;
-                        lblPrueba2.Content = cabezaColor.Y;
 
                         double angulo1 = ObtenerAnguloEspalda(skeleton);
 
